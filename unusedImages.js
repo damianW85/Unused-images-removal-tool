@@ -9,7 +9,6 @@ const checkForUnusedImages = async (breakpoints, browser, page, filePath) => {
   const deviceScales = [1, 2]
   const folderName = path.join(__dirname, filePath.replace('/index.html', ''))
   const allImages = Array.from(fs.readdirSync(`${folderName}/images`))
-  console.log(folderName)
 
   // Loop through deviceScales array
   for (let d = 0; d < deviceScales.length; d++) {
