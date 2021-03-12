@@ -37,15 +37,12 @@ const checkForUnusedImages = async (breakpoints, browser, page, filePath) => {
         // Log results at the end of the loop to the console.
         console.log('allImages: ', allImages.length)
         console.log('usedImages: ', [...new Set(usedImages)], [...new Set(usedImages)].length)
-        console.log('unusedImages: ', unusedImages, unusedImages.length)
+        console.log('unusedImages: ', [...new Set(unusedImages)], [...new Set(unusedImages)].length)
         // Loop through the unusedImages array and delete the images.
-        return unusedImages.map(imageName => {
+        return [...new Set(unusedImages)].map(imageName => {
           fs.unlink(`${folderName}/images/${imageName}`, (err) => {
-            if (err) {
-              console.error('File DELETION ERROR: ', err)
-              return
-            }
-            console.log('File DELETED: ', `${folderName}/images/${imageName}`)
+            if (err) return console.error('File DELETION ERROR: ', err)
+            return console.log('File DELETED: ', `${folderName}/images/${imageName}`)
           })
         })
       }
@@ -75,10 +72,7 @@ const searchForFiles = (startPath, filter, callback) => {
 (() => {
   searchForFiles('./', /\.html$/, async (filename) => {
     console.log('-- found: ', filename)
-    const browser = await puppeteer.launch({
-      // Remove this object completely if you do not want top see the browser.
-      headless: false
-    })
+    const browser = await puppeteer.launch()
     const page = await browser.newPage()
     await page.goto(fileUrl(filename))
     const client = await page.target().createCDPSession()
