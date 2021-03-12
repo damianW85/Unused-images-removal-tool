@@ -1,0 +1,10 @@
+{
+  "name": "unused_assets_removal_test",
+  "version": "1.0.0",
+  "author": "damian",
+  "license": "ISC",
+  "dependencies": {
+    "file-url": "^3.0.0",
+    "puppeteer": "^8.0.0"
+  }
+}
