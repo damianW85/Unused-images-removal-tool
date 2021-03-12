@@ -23,7 +23,6 @@ const checkForUnusedImages = async (breakpoints, browser, page, filePath) => {
       // Refresh the HTML at each breakpoint to load the relevant images.
       await page.goto(fileUrl(filePath), {
         waitUntil: 'networkidle0',
-        ƒ
       })
       // Store the name of each image requested in the usedImages array.
       page.on('request', (req) => {
