@@ -54,7 +54,7 @@ const checkForUnusedImages = async (breakpoints, browser, page, filePath) => {
   }
 }
 
-const searchForHtml = (startPath, filter, callback) => {
+const searchForFiles = (startPath, filter, callback) => {
 
   if (!fs.existsSync(startPath)) {
     console.log("no dir ", startPath);
@@ -67,14 +67,14 @@ const searchForHtml = (startPath, filter, callback) => {
     const filename = path.join(startPath, files[i]);
     const stat = fs.lstatSync(filename);
 
-    if (stat.isDirectory() && !filename.includes('node_modules')) searchForHtml(filename, filter, callback); //recurse
+    if (stat.isDirectory() && !filename.includes('node_modules')) searchForFiles(filename, filter, callback); //recurse
 
     else if (filter.test(filename)) callback(filename);
   }
 }
 
 (() => {
-  searchForHtml('./', /\.html$/, async (filename) => {
+  searchForFiles('./', /\.html$/, async (filename) => {
     console.log('-- found: ', filename);
     const browser = await puppeteer.launch({
       // Remove this object completely if you do not want top see the browser.
