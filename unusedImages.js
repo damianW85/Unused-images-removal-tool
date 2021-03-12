@@ -40,9 +40,11 @@ const checkForUnusedImages = async (breakpoints, browser, page, filePath) => {
         console.log('unusedImages: ', [...new Set(unusedImages)], [...new Set(unusedImages)].length)
         // Loop through the unusedImages array and delete the images.
         return [...new Set(unusedImages)].map(imageName => {
+
           fs.unlink(`${folderName}/images/${imageName}`, (err) => {
+
             if (err) return console.error('File DELETION ERROR: ', err)
-            return console.log('File DELETED: ', `${folderName}/images/${imageName}`)
+            console.log('File DELETED: ', `${folderName}/images/${imageName}`)
           })
         })
       }
@@ -52,10 +54,7 @@ const checkForUnusedImages = async (breakpoints, browser, page, filePath) => {
 
 const searchForFiles = (startPath, filter, callback) => {
 
-  if (!fs.existsSync(startPath)) {
-    console.log("no dir ", startPath)
-    return
-  }
+  if (!fs.existsSync(startPath)) return console.log("no dir ", startPath)
 
   const files = fs.readdirSync(startPath)
 
