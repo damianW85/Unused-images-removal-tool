@@ -61,17 +61,17 @@ const searchForHtml = (startPath, filter, callback) => {
     return;
   }
 
-  var files = fs.readdirSync(startPath);
-  for (var i = 0; i < files.length; i++) {
-    var filename = path.join(startPath, files[i]);
-    var stat = fs.lstatSync(filename);
-    if (stat.isDirectory() && !filename.includes('node_modules')) {
-      searchForHtml(filename, filter, callback); //recurse
-    } else if (filter.test(filename)) {
-      callback(filename);
-    }
-  };
-};
+  const files = fs.readdirSync(startPath);
+
+  for (let i = 0; i < files.length; i++) {
+    const filename = path.join(startPath, files[i]);
+    const stat = fs.lstatSync(filename);
+
+    if (stat.isDirectory() && !filename.includes('node_modules')) searchForHtml(filename, filter, callback); //recurse
+
+    else if (filter.test(filename)) callback(filename);
+  }
+}
 
 (() => {
   searchForHtml('./', /\.html$/, async (filename) => {
