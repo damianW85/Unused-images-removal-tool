@@ -12,9 +12,9 @@ const deleteFile = filePath => fs.unlink(filePath, (err) => {
 const checkForUnusedImages = async (breakpoints, browser, page, filePath) => {
   const usedImages = []
   const deviceScales = [1, 2]
-  const folderName = path.join(__dirname, filePath.replace(/([^\/]+$)/, ''))
+  const rootFolder = path.join(__dirname, filePath.replace(/([^\/]+$)/, ''))
   // TODO: make the images array formation more dynamic.
-  const allImages = Array.from(fs.readdirSync(`${folderName}images`))
+  const allImages = Array.from(fs.readdirSync(`${rootFolder}images`))
 
   // Loop through deviceScales array
   for (let d = 0; d < deviceScales.length; d++) {
@@ -39,13 +39,16 @@ const checkForUnusedImages = async (breakpoints, browser, page, filePath) => {
       if (i === breakpoints.length - 1 && d === deviceScales.length - 1) {
         await browser.close()
         // Create the unusedImages array.
-        const unusedImages = allImages.filter(x => !usedImages.includes(x)).concat(usedImages.filter(d => !allImages.includes(d)))
+        const unusedImages = allImages.filter(x => !usedImages.includes(x))
+        const notFoundImages = usedImages.filter(d => !allImages.includes(d))
         // Log results at the end of the loop to the console.
         console.log('allImages: ', allImages.length)
         console.log('usedImages: ', [...new Set(usedImages)], [...new Set(usedImages)].length)
         console.log('unusedImages: ', [...new Set(unusedImages)], [...new Set(unusedImages)].length)
+
+        if (notFoundImages.length) console.error('ERROR: Some images were requested but NOT FOUND!: ', [...new Set(notFoundImages)])
         // Loop through the unusedImages array and delete the images.
-        return [...new Set(unusedImages)].map(imageName => deleteFile(`${folderName}images/${imageName}`))
+        return [...new Set(unusedImages)].map(imageName => deleteFile(`${rootFolder}images/${imageName}`))
       }
     }
   }
