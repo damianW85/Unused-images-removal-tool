@@ -12,8 +12,9 @@ const deleteFile = filePath => fs.unlink(filePath, (err) => {
 const checkForUnusedImages = async (breakpoints, browser, page, filePath) => {
   const usedImages = []
   const deviceScales = [1, 2]
-  const folderName = path.join(__dirname, filePath.replace('/index.html', ''))
-  const allImages = Array.from(fs.readdirSync(`${folderName}/images`))
+  const folderName = path.join(__dirname, filePath.replace(/([^\/]+$)/, ''))
+  // TODO: make the images array formation more dynamic.
+  const allImages = Array.from(fs.readdirSync(`${folderName}images`))
 
   // Loop through deviceScales array
   for (let d = 0; d < deviceScales.length; d++) {
@@ -44,7 +45,7 @@ const checkForUnusedImages = async (breakpoints, browser, page, filePath) => {
         console.log('usedImages: ', [...new Set(usedImages)], [...new Set(usedImages)].length)
         console.log('unusedImages: ', [...new Set(unusedImages)], [...new Set(unusedImages)].length)
         // Loop through the unusedImages array and delete the images.
-        return [...new Set(unusedImages)].map(imageName => deleteFile(`${folderName}/images/${imageName}`))
+        return [...new Set(unusedImages)].map(imageName => deleteFile(`${folderName}images/${imageName}`))
       }
     }
   }
