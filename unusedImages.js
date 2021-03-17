@@ -3,11 +3,10 @@ const puppeteer = require('puppeteer')
 const fileUrl = require('file-url')
 const path = require('path')
 const fs = require('fs')
-
-const deleteFile = filePath => fs.unlink(filePath, (err) => {
-  if (err) return console.error('File DELETION ERROR: ', err)
-  console.log('File DELETED: ', filePath)
-})
+const {
+  searchForFiles,
+  deleteFile
+} = require('./helperFunctions')
 
 const checkForUnusedImages = async (breakpoints, browser, page, filePath) => {
   const usedImages = []
@@ -54,51 +53,33 @@ const checkForUnusedImages = async (breakpoints, browser, page, filePath) => {
   }
 }
 
-const searchForFiles = (startPath, filter, callback) => {
-
-  if (!fs.existsSync(startPath)) return console.log("no dir ", startPath)
-
-  const files = fs.readdirSync(startPath)
-
-  for (let i = 0; i < files.length; i++) {
-    const filename = path.join(startPath, files[i])
-    const stat = fs.lstatSync(filename)
-
-    if (stat.isDirectory() && !filename.includes('node_modules')) searchForFiles(filename, filter, callback) //recurse
-
-    else if (filter.test(filename)) callback(filename)
-  }
-}
-
-(() => {
-  searchForFiles('./', /\.html$/, async (filename) => {
-    console.log('-- found: ', filename)
-    const browser = await puppeteer.launch()
-    const page = await browser.newPage()
-    await page.goto(fileUrl(filename))
-    const client = await page.target().createCDPSession()
-    await client.send('DOM.enable')
-    await client.send('CSS.enable')
-    // Get all media query breakpoints from css.
-    const mediaQueries = await client.send('CSS.getMediaQueries')
-    let breakpoints = []
-    mediaQueries.medias.forEach(mediaQuery => {
-      mediaQuery.mediaList.forEach(item => {
-        item.expressions.forEach(expression => {
-          if (['max-width', 'min-width'].indexOf(expression.feature) !== -1) {
-            breakpoints.push({
-              type: expression.feature,
-              value: expression.value,
-              unit: expression.unit
-            })
-          }
-        })
+(() => searchForFiles('./', /\.html$/, async (filename) => {
+  console.log('-- found: ', filename)
+  const browser = await puppeteer.launch()
+  const page = await browser.newPage()
+  await page.goto(fileUrl(filename))
+  const client = await page.target().createCDPSession()
+  await client.send('DOM.enable')
+  await client.send('CSS.enable')
+  // Get all media query breakpoints from css.
+  const mediaQueries = await client.send('CSS.getMediaQueries')
+  let breakpoints = []
+  mediaQueries.medias.forEach(mediaQuery => {
+    mediaQuery.mediaList.forEach(item => {
+      item.expressions.forEach(expression => {
+        if (['max-width', 'min-width'].indexOf(expression.feature) !== -1) {
+          breakpoints.push({
+            type: expression.feature,
+            value: expression.value,
+            unit: expression.unit
+          })
+        }
       })
     })
-    // Start with 400px for loading the smallest assets.
-    breakpoints = [400, ...new Set(breakpoints.map(point => point.value))].sort((a, b) => a - b)
-    // Show the breakpoints we have found in css.
-    console.log('Breakpoints: ', breakpoints)
-    return checkForUnusedImages(breakpoints, browser, page, filename)
   })
-})()
+  // Start with 400px for loading the smallest assets.
+  breakpoints = [400, ...new Set(breakpoints.map(point => point.value))].sort((a, b) => a - b)
+  // Show the breakpoints we have found in css.
+  console.log('Breakpoints: ', breakpoints)
+  return checkForUnusedImages(breakpoints, browser, page, filename)
+}))()
