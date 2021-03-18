@@ -5,6 +5,8 @@
   "license": "ISC",
   "dependencies": {
     "file-url": "^3.0.0",
+    "jsdom": "^16.5.1",
+    "jsrtf": "^0.0.3",
     "puppeteer": "^8.0.0"
   }
 }

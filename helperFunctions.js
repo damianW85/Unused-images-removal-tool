@@ -27,21 +27,8 @@ const createFile = (filePath, fileContent) => fs.writeFile(filePath, fileContent
   console.log(`Text file created at: ${filePath}`)
 })
 
-const getTextFromNode = (node, resultArray) => {
-  let child
-
-  for (let i = 0; i < node.childNodes.length; i++) {
-    child = node.childNodes[i]
-
-    if (child.nodeType === 1) return getTextFromNode(child, resultArray)
-    else if (child.nodeType === 3 && child.textContent.length) resultArray.push(child.textContent)
-  }
-  return resultArray
-}
-
 module.exports = {
   searchForFiles,
   deleteFile,
-  createFile,
-  getTextFromNode
+  createFile
 }
