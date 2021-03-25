@@ -1,16 +1,66 @@
 const path = require('path')
-const jsRTF = require('jsrtf')
+require('jspdf-autotable')
+const {
+  calibriNormal
+} = require('./calibriNormalFont')
+const {
+  calibriBold
+} = require('./calibriBoldFont')
+const {
+  jsPDF
+} = require('jspdf')
 const {
   JSDOM
 } = require('jsdom')
 
 const {
   searchForFiles,
-  createFile,
   cleanHtmlString
 } = require('./helperFunctions')
 
-const boldElements = ['H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'STRONG'];
+const updateLineGap = multiple => multiple * 5
+const needNewPage = vertGap => vertGap > 275
+const removeEmptyStringsAndSpaces = arrayToClean => arrayToClean.filter(entry => entry.trim() != '')
+
+const arrayToRow = (arr, isHeader) => {
+  const rows = []
+
+  if (isHeader) {
+    arr.map(rowArray => rows.push(rowArray[0]))
+  } else {
+    for (let i = 1; i < arr[0].length - 1; i++) {
+      const row = []
+      arr.map(subArr => row.push(subArr[i]))
+      rows.push(row)
+    }
+  }
+  return isHeader ? [rows] : rows
+}
+
+const buildTable = (dom, doc) => {
+  const tableArray = []
+
+  for (let z = 0; dom.window.document.querySelectorAll(`.product-${z}`).length; z++) {
+    const column = []
+
+    dom.window.document.querySelectorAll(`.product-${z}`).forEach(tableNode => {
+      column.push(...[cleanHtmlString(tableNode.innerHTML)].filter(Boolean))
+    })
+    tableArray.push(column)
+  }
+
+  return doc.autoTable({
+    head: arrayToRow(tableArray, true),
+    body: arrayToRow(tableArray),
+    styles: {
+      fontSize: 8,
+      tableWidth: 'wrap',
+      font: 'calibriNormal'
+    }
+  })
+}
+
+const boldElements = ['H1', 'H2', 'H3', 'H4', 'H5', 'H6'];
 
 (() => searchForFiles('./', /\.html$/, filename => {
   console.log('-- found: ', filename)
@@ -18,31 +68,112 @@ const boldElements = ['H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'STRONG'];
   JSDOM.fromFile(filename).then(dom => {
     const results = []
     const rootFolder = path.join(__dirname, filename.replace(/([^\/]+$)/, ''))
-    const myDoc = new jsRTF()
+    const fontSize = 8
+    const doc = new jsPDF()
+    doc.addFileToVFS('calibriNormal.ttf', calibriNormal)
+    doc.addFont('calibriNormal.ttf', 'calibriNormal', 'normal')
+    doc.addFileToVFS('calibriBold.ttf', calibriBold)
+    doc.addFont('calibriBold.ttf', 'calibriBold', 'bold')
+    doc.setFontSize(fontSize)
 
+    buildTable(dom, doc)
+    //this adds a new page below the table as the table is currently at the top of the document.
+    doc.addPage()
+    // get all the text by querying all elements with the copy class.
     dom.window.document.querySelectorAll('.copy').forEach(domNode => {
+      // console.log(domNode.parentElement.classList.contains('compare-section'))
+      // filter all tags from the innerHTML of the dom node except frr strong tags so we can know where text is bold.
+      const stringWithStrongTags = cleanHtmlString(domNode.innerHTML, 'strong')
 
-      results.push({
-        name: domNode.nodeName,
-        text: cleanHtmlString(domNode.innerHTML)
-      })
+      // if (domNode.parentElement.classList.contains('compare-section')) {
+      // console.log(domNode.textContent)
+      // }
+
+      if (stringWithStrongTags.length > 190) {
+        // split the string if it's too long before adding it to the results array.
+        const longStringArray = removeEmptyStringsAndSpaces(stringWithStrongTags.split(/(.{1,190})(\s|$)(?=[^>]*(?:<|$))/g))
+
+        longStringArray.map(str => {
+          results.push({
+            name: domNode.nodeName,
+            text: str
+          })
+        })
+      } else {
+        results.push({
+          name: domNode.nodeName,
+          text: stringWithStrongTags
+        })
+      }
     })
-    // Formatter object
-    const textFormat = new jsRTF.Format({
-      spaceBefore: 200,
-      spaceAfter: 200,
-      paragraph: true
+    // this is the padding gap on the left of the document.
+    const startGap = 15
+    let verticalGap = startGap
+    // this is effectively the line height.
+    const horizontalGap = 10
+
+    results.map(textObject => {
+      // check if we need to add a new page to the document.
+      needNewPage(verticalGap) ? (doc.addPage(), verticalGap = startGap) : null
+      const fullText = cleanHtmlString(textObject.text).trim()
+      // strip the text from the strong tags in to an array.
+      const textStrippedFromTags = textObject.text.match(/(?<=>)([\w\s]+)(?=<\/)/g)
+
+      if (textStrippedFromTags) {
+        textStrippedFromTags.map(textToBeBold => {
+          const boldText = cleanHtmlString(textToBeBold).trim()
+          const notBoldStringParts = fullText.split(boldText)
+          // check if all the text is bold and then proceed accordingly.
+          if (fullText !== boldText) {
+            removeEmptyStringsAndSpaces(notBoldStringParts).map(notBoldString => {
+
+              const unBoldText = cleanHtmlString(notBoldString).trim()
+              if (fullText.indexOf(boldText) <= 1) {
+                // write bold text that is at the start of the line.
+                doc.setFont('calibriBold', 'bold')
+                doc.text(horizontalGap, verticalGap, doc.splitTextToSize(boldText, 190))
+                doc.setFont('calibriNormal', 'normal')
+                doc.text(horizontalGap + Math.round(doc.getStringUnitWidth(boldText)) * 3.1, verticalGap, doc.splitTextToSize(unBoldText, 190))
+              } else {
+                // here is the part where I am trying to write bold and not bold text to the doc in the same line. This isNOT working well at the moment.
+                doc.setFont('calibriNormal', 'normal')
+                doc.text(horizontalGap, verticalGap, doc.splitTextToSize(unBoldText, 190))
+                doc.setFont('calibriBold', 'bold')
+                doc.text(horizontalGap + Math.round(doc.getStringUnitWidth(unBoldText)) * 3.1, verticalGap, doc.splitTextToSize(boldText, 190))
+                if (verticalGap !== startGap) verticalGap += updateLineGap(0.6)
+                // verticalGap += updateLineGap(doc.splitTextToSize(boldText, 190).length)
+                // console.log(fullText.length, doc.splitTextToSize(fullText, 190), boldText)
+                // console.log(`NOT-BOLD:: ${unBoldText}`, `BOLD:: ${boldText}`, `NOT-BOLD-TEXT-WIDTH:: ${doc.getStringUnitWidth(unBoldText)}`, `FULL-TEXT:: ${fullText}`)
+                // console.log('LastThingToday', [...new Set(notBoldStringParts)])
+                // console.log(fullText.indexOf(boldText), `BBOLLLDDD:  ${Math.round(doc.getStringUnitWidth(boldText))}`)
+              }
+            })
+          } else {
+            doc.setFont('calibriBold', 'bold')
+            doc.text(horizontalGap, verticalGap, doc.splitTextToSize(fullText, 190))
+          }
+        })
+      } else if (boldElements.includes(textObject.name)) {
+        // check for header elements and write them in bold to the doc.
+        doc.setFont('calibriBold', 'bold')
+        doc.setFontSize(10)
+        if (verticalGap !== startGap) verticalGap += updateLineGap(doc.splitTextToSize(fullText, 190).length)
+        doc.text(horizontalGap, verticalGap, doc.splitTextToSize(fullText, 190))
+      } else {
+        // write normal text to the doc.
+        doc.setFont('calibriNormal', 'normal')
+        doc.setFontSize(8)
+        doc.text(horizontalGap, verticalGap, doc.splitTextToSize(fullText, 190))
+      }
+      // update the line height after writing the text.
+      verticalGap += updateLineGap(doc.splitTextToSize(fullText, 190).length)
     })
 
-    results.map(testObject => {
-      if (boldElements.includes(testObject.name)) myDoc.writeText(testObject.text, {
-        ...textFormat,
-        bold: true
-      })
-      else myDoc.writeText(testObject.text, textFormat)
-    })
-
-    const buffer = new Buffer.from(myDoc.createDocument(), 'binary')
-    return createFile(`${rootFolder}HTMLText.rtf`, buffer)
+    try {
+      doc.save(`${rootFolder}HTMLText.pdf`)
+      return console.log('PDF File Saved at: ', `${rootFolder}HTMLText.pdf`)
+    } catch (error) {
+      console.error('Error Saving PDF File ', error)
+    }
   })
 }))()
