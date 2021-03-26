@@ -33,7 +33,7 @@ const browser = await puppeteer.launch()
 const browser = await puppeteer.launch({ headless: false })
 ```
 
-# Get HTML-Text-Tool
+# Get-HTML-Text-Tool
 Find and extracts text from html files then writes text to a PDF and saves in the root directory of the `.html` file.
 
 **Default usage**
