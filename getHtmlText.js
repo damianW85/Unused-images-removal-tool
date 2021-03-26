@@ -37,7 +37,7 @@ const arrayToRow = (arr, isHeader) => {
   return isHeader ? [rows] : rows
 }
 
-const buildTable = (dom, doc) => {
+const buildTable = (dom, doc, position, callback) => {
   const tableArray = []
 
   for (let z = 0; dom.window.document.querySelectorAll(`.product-${z}`).length; z++) {
@@ -52,7 +52,15 @@ const buildTable = (dom, doc) => {
   return doc.autoTable({
     head: arrayToRow(tableArray, true),
     body: arrayToRow(tableArray),
+    startY: position.verticalGap,
+    didDrawPage: HookData => {
+      callback(HookData.table.body.length)
+    },
+    margin: {
+      left: position.horizontalGap
+    },
     styles: {
+      minCellHeight: 10,
       fontSize: 8,
       tableWidth: 'wrap',
       font: 'calibriNormal'
@@ -69,6 +77,7 @@ const boldElements = ['H1', 'H2', 'H3', 'H4', 'H5', 'H6'];
     const results = []
     const rootFolder = path.join(__dirname, filename.replace(/([^\/]+$)/, ''))
     const fontSize = 8
+    let comparisonTable = false
     const doc = new jsPDF()
     doc.addFileToVFS('calibriNormal.ttf', calibriNormal)
     doc.addFont('calibriNormal.ttf', 'calibriNormal', 'normal')
@@ -76,20 +85,16 @@ const boldElements = ['H1', 'H2', 'H3', 'H4', 'H5', 'H6'];
     doc.addFont('calibriBold.ttf', 'calibriBold', 'bold')
     doc.setFontSize(fontSize)
 
-    buildTable(dom, doc)
-    //this adds a new page below the table as the table is currently at the top of the document.
-    doc.addPage()
     // get all the text by querying all elements with the copy class.
     dom.window.document.querySelectorAll('.copy').forEach(domNode => {
-      // console.log(domNode.parentElement.classList.contains('compare-section'))
-      // filter all tags from the innerHTML of the dom node except frr strong tags so we can know where text is bold.
+      // filter all tags from the innerHTML of the dom node except for strong tags so we can know where text is bold.
       const stringWithStrongTags = cleanHtmlString(domNode.innerHTML, 'strong')
-
-      // if (domNode.parentElement.classList.contains('compare-section')) {
-      // console.log(domNode.textContent)
-      // }
-
-      if (stringWithStrongTags.length > 190) {
+      // Identify elements inside the comparison table and push the table name into the results array.
+      if (domNode.closest('.compare-wrapper')) {
+        results.push({
+          name: 'compareTable'
+        })
+      } else if (stringWithStrongTags.length > 190) {
         // split the string if it's too long before adding it to the results array.
         const longStringArray = removeEmptyStringsAndSpaces(stringWithStrongTags.split(/(.{1,190})(\s|$)(?=[^>]*(?:<|$))/g))
 
@@ -113,6 +118,17 @@ const boldElements = ['H1', 'H2', 'H3', 'H4', 'H5', 'H6'];
     const horizontalGap = 10
 
     results.map(textObject => {
+      if (textObject.name === 'compareTable') {
+        if (!comparisonTable) {
+          // create the comparison table, update the verticalGap and set the variable to true.
+          buildTable(dom, doc, {
+            verticalGap,
+            horizontalGap
+          }, totalTableCells => verticalGap += (totalTableCells * 12))
+          comparisonTable = true
+        }
+        return
+      }
       // check if we need to add a new page to the document.
       needNewPage(verticalGap) ? (doc.addPage(), verticalGap = startGap) : null
       const fullText = cleanHtmlString(textObject.text).trim()
