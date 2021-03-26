@@ -5,7 +5,7 @@ Find and test all css breakpoints using puppeteer to detect and delete unused im
 
 * Works with node.js.
 * Searches recursively from root directory down:(inside subdirectories).
-* Finds and deletes all unused images and deletes them.
+* Finds and deletes all unused images.
 * Throws an error if images are requested by the browser but not found in images directory.
 
 ## Requirements
@@ -31,4 +31,15 @@ const browser = await puppeteer.launch()
 
 //To this:
 const browser = await puppeteer.launch({ headless: false })
+```
+
+# Get HTML-Text-Tool
+Find and extracts text from html files then writes text to a PDF and saves in the root directory of the `.html` file.
+
+**Default usage**
+You can use this tool by doing:
+
+```bash
+$ npm install
+$ node getHtmlText.js
 ```
