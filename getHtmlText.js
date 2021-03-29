@@ -20,7 +20,6 @@ const {
 
 const updateLineGap = multiple => multiple * 5
 const needNewPage = vertGap => vertGap > 275
-const removeEmptyStringsAndSpaces = arrayToClean => arrayToClean.filter(entry => entry.trim() != '')
 
 const arrayToRow = (arr, isHeader) => {
   const rows = []
@@ -94,16 +93,6 @@ const boldElements = ['H1', 'H2', 'H3', 'H4', 'H5', 'H6'];
         results.push({
           name: 'compareTable'
         })
-        // } else if (stringWithStrongTags.length > 190) {
-        //   // split the string if it's too long before adding it to the results array.
-        //   const longStringArray = removeEmptyStringsAndSpaces(stringWithStrongTags.split(/(.{1,190})(\s|$)(?=[^>]*(?:<|$))/g))
-
-        //   longStringArray.map(str => {
-        //     results.push({
-        //       name: domNode.nodeName,
-        //       text: str
-        //     })
-        //   })
       } else {
         results.push({
           name: domNode.nodeName,
@@ -150,64 +139,28 @@ const boldElements = ['H1', 'H2', 'H3', 'H4', 'H5', 'H6'];
           if (i % 2 === 0) {
             doc.setFont('calibriNormal', 'normal')
           }
-          doc.text(paddingLeft, verticalGap, doc.splitTextToSize(cleanText, 190))
-          // console.log(Math.ceil(doc.getTextWidth(cleanText.trim()) / 190), `TTTTTTTTTT  ${text}`)
-          const test = Math.ceil(doc.getTextWidth(cleanText) / 190)
-          if (test > 1 && verticalGap !== startGap) verticalGap += updateLineGap(test)
-          paddingLeft + doc.getTextWidth(cleanText) > 190 ? paddingLeft = horizontalGap : paddingLeft += doc.getTextWidth(cleanText) + 1
 
-
+          doc.splitTextToSize(cleanText, 190).map(t => {
+            doc.text(paddingLeft, verticalGap, t)
+            verticalGap += updateLineGap(1)
+          })
         })
-        // let str = fullText
-        // textStrippedFromTags.map(textToBeBold => {
-        //   const boldText = cleanHtmlString(textToBeBold).trim()
-        //   const notBoldStringParts = fullText.split(boldText)
-        //   str = str.replace(textToBeBold, 'TEXT WAS HERE')
-        //   console.log(str)
-        //   // check if all the text is bold and then proceed accordingly.
-        //   if (fullText !== boldText) {
-        //     removeEmptyStringsAndSpaces(notBoldStringParts).map(notBoldString => {
-
-        //       const unBoldText = cleanHtmlString(notBoldString).trim()
-        //       if (fullText.indexOf(boldText) <= 1) {
-        //         // write bold text that is at the start of the line.
-        //         doc.setFont('calibriBold', 'bold')
-        //         doc.text(horizontalGap, verticalGap, doc.splitTextToSize(boldText.trim(), 190))
-        //         doc.setFont('calibriNormal', 'normal')
-        //         doc.text((horizontalGap + 1) + doc.getTextWidth(boldText.trim()), verticalGap, doc.splitTextToSize(unBoldText.trim(), 190))
-        //       } else {
-        //         // here is the part where I am trying to write bold and not bold text to the doc in the same line. This isNOT working well at the moment.
-        //         doc.setFont('calibriNormal', 'normal')
-        //         doc.text(horizontalGap, verticalGap, doc.splitTextToSize(unBoldText.trim(), 190))
-        //         doc.setFont('calibriBold', 'bold')
-        //         doc.text(horizontalGap + doc.getTextWidth(unBoldText.trim()), verticalGap, doc.splitTextToSize(boldText.trim(), 190))
-        //         if (verticalGap !== startGap) verticalGap += updateLineGap(0.6)
-        //         // verticalGap += updateLineGap(doc.splitTextToSize(boldText, 190).length)
-        //         // console.log(fullText.length, doc.splitTextToSize(fullText, 190), boldText)
-        //         // console.log(`NOT-BOLD:: ${unBoldText}`, `BOLD:: ${boldText}`, `FULL-TEXT:: ${fullText}`)
-        //         // console.log('LastThingToday', [...new Set(notBoldStringParts)])
-        //         // console.log(fullText.indexOf(boldText), `BBOLLLDDD:  ${(doc.getStringUnitWidth(boldText))}`) `NOT-BOLD-TEXT-WIDTH:: ${doc.getStringUnitWidth(unBoldText)}`
-        //       }
-        //     })
-        // } else {
-        //   doc.setFont('calibriBold', 'bold')
-        //   doc.text(horizontalGap, verticalGap, doc.splitTextToSize(fullText, 190))
-        // }
-        // })
       } else if (boldElements.includes(textObject.name)) {
         // check for header elements and write them in bold to the doc.
         doc.setFont('calibriBold', 'bold')
         doc.setFontSize(headingFontSize)
         if (verticalGap !== startGap) verticalGap += updateLineGap(doc.splitTextToSize(fullText, 190).length)
         doc.text(horizontalGap, verticalGap, doc.splitTextToSize(fullText, 190))
+        verticalGap += updateLineGap(doc.splitTextToSize(fullText, 190).length)
       } else {
         // write normal text to the doc.
         doc.setFont('calibriNormal', 'normal')
         doc.setFontSize(fontSize)
         doc.text(horizontalGap, verticalGap, doc.splitTextToSize(fullText, 190))
+        verticalGap += updateLineGap(doc.splitTextToSize(fullText, 190).length)
       }
       // update the line height after writing the text.
-      verticalGap += updateLineGap(doc.splitTextToSize(fullText, 190).length)
+
     })
 
     try {

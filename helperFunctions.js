@@ -34,7 +34,7 @@ const cleanHtmlString = (str, ignore = null) => {
 
   return str.replace(htmlTagsToRemove, ' ')
     .replace(doubleSpaces, ' ')
-    .replace(beginningSpaces, '')
+    .replace(beginningSpaces, '').trim()
 }
 
 module.exports = {
