@@ -21,7 +21,7 @@ const {
 const updateLineGap = multiple => multiple * 5
 const needNewPage = vertGap => vertGap > 275
 
-const arrayToRow = (arr, isHeader) => {
+const arrayToRow = (arr, isHeader = false) => {
   const rows = []
 
   if (isHeader) {
@@ -66,8 +66,6 @@ const buildTable = (dom, doc, position, callback) => {
   })
 }
 
-const boldElements = ['H1', 'H2', 'H3', 'H4', 'H5', 'H6'];
-
 (() => searchForFiles('./', /\.html$/, filename => {
   console.log('-- found: ', filename)
 
@@ -78,6 +76,8 @@ const boldElements = ['H1', 'H2', 'H3', 'H4', 'H5', 'H6'];
     const fontSize = 8
     const headingFontSize = 10
     const textLineLength = 185
+    const boldElements = ['H1', 'H2', 'H3', 'H4', 'H5', 'H6']
+    const compareSection = 'section-compare-table'
     const footerSection = 'section w6ea047'
     const boldFont = ['calibriBold', 'bold']
     const normalFont = ['calibriNormal', 'normal']
@@ -108,7 +108,7 @@ const boldElements = ['H1', 'H2', 'H3', 'H4', 'H5', 'H6'];
     let currentSection = ''
 
     results.map(textObject => {
-      if (textObject.parentClasses.includes('section-compare-table')) {
+      if (textObject.parentClasses.includes(compareSection)) {
         if (!comparisonTable) {
           // create the comparison table, update the verticalGap and set the variable to true.
           buildTable(dom, doc, {
@@ -120,7 +120,7 @@ const boldElements = ['H1', 'H2', 'H3', 'H4', 'H5', 'H6'];
         return
       }
 
-      textObject.textArray.map((textLine, i) => {
+      textObject.textArray.map(textLine => {
         const arrayOfNormalAndBoldText = textLine.split('**')
 
         if (!boldElements.includes(textObject.name) && arrayOfNormalAndBoldText.length) {
