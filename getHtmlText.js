@@ -137,8 +137,7 @@ const boldElements = ['H1', 'H2', 'H3', 'H4', 'H5', 'H6'];
             doc.text(paddingLeft, verticalGap, cleanText)
             // split the footer section.
             if (currentSection === 'section w6ea047') {
-              if (doc.getFont().fontName !== 'calibriBold')
-                paddingLeft = horizontalGap
+              paddingLeft = horizontalGap
               verticalGap += updateLineGap(1)
             } else {
               paddingLeft += doc.getTextWidth(cleanText) + 1
