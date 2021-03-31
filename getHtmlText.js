@@ -72,36 +72,40 @@ const boldElements = ['H1', 'H2', 'H3', 'H4', 'H5', 'H6'];
   console.log('-- found: ', filename)
 
   JSDOM.fromFile(filename).then(dom => {
+    let comparisonTable = false
     const results = []
     const rootFolder = path.join(__dirname, filename.replace(/([^\/]+$)/, ''))
     const fontSize = 8
     const headingFontSize = 10
     const textLineLength = 185
-    let comparisonTable = false
+    const footerSection = 'section w6ea047'
+    const boldFont = ['calibriBold', 'bold']
+    const normalFont = ['calibriNormal', 'normal']
+
     const doc = new jsPDF()
     doc.addFileToVFS('calibriNormal.ttf', calibriNormal)
-    doc.addFont('calibriNormal.ttf', 'calibriNormal', 'normal')
+    doc.addFont('calibriNormal.ttf', ...normalFont)
     doc.addFileToVFS('calibriBold.ttf', calibriBold)
-    doc.addFont('calibriBold.ttf', 'calibriBold', 'bold')
+    doc.addFont('calibriBold.ttf', ...boldFont)
     doc.setFontSize(fontSize)
 
     // get all the text by querying all elements with the copy class.
     dom.window.document.querySelectorAll('.copy').forEach(domNode => {
       // filter all tags from the innerHTML of the dom node except for strong tags, then replace those tags with ** so we can know where text is bold.
-      const stringWithStrongTags = cleanHtmlString(domNode.innerHTML, ['strong']).replace(/(<[^>]*>)|(^ +|\n|\t|\r)/gm, '**')
+      const stringWithBoldStars = cleanHtmlString(domNode.innerHTML, ['strong']).replace(/(<[^>]*>)|(^ +|\n|\t|\r)/gm, '**')
 
       results.push({
         parentClasses: domNode.closest('.section').className,
         name: domNode.nodeName,
-        textArray: doc.splitTextToSize(stringWithStrongTags, textLineLength)
+        textArray: doc.splitTextToSize(stringWithBoldStars, textLineLength)
       })
     })
     // this is the padding gap on the left of the document.
     const startGap = 15
-    let verticalGap = startGap
-    let currentSection = ''
     // this is effectively the line height.
     const horizontalGap = 10
+    let verticalGap = startGap
+    let currentSection = ''
 
     results.map(textObject => {
       if (textObject.parentClasses.includes('section-compare-table')) {
@@ -127,8 +131,8 @@ const boldElements = ['H1', 'H2', 'H3', 'H4', 'H5', 'H6'];
             if (!cleanText.length) return
 
             doc.setFontSize(fontSize)
-            doc.setFont('calibriBold', 'bold')
-            if (j % 2 === 0) doc.setFont('calibriNormal', 'normal')
+            doc.setFont(...boldFont)
+            if (j % 2 === 0) doc.setFont(...normalFont)
 
             if (currentSection !== textObject.parentClasses) {
               verticalGap += updateLineGap(1)
@@ -136,7 +140,7 @@ const boldElements = ['H1', 'H2', 'H3', 'H4', 'H5', 'H6'];
             }
             doc.text(paddingLeft, verticalGap, cleanText)
             // split the footer section.
-            if (currentSection === 'section w6ea047') {
+            if (currentSection === footerSection) {
               paddingLeft = horizontalGap
               verticalGap += updateLineGap(1)
             } else {
@@ -144,11 +148,11 @@ const boldElements = ['H1', 'H2', 'H3', 'H4', 'H5', 'H6'];
             }
           })
           // Only update the vertical spacing if we are not in the footer section.
-          if (currentSection !== 'section w6ea047') verticalGap += updateLineGap(1)
+          if (currentSection !== footerSection) verticalGap += updateLineGap(1)
         }
         if (boldElements.includes(textObject.name)) {
           // check for header elements and write them in bold to the doc.
-          doc.setFont('calibriBold', 'bold')
+          doc.setFont(...boldFont)
           doc.setFontSize(headingFontSize)
           if (verticalGap !== startGap) verticalGap += updateLineGap(1)
           doc.text(horizontalGap, verticalGap, cleanHtmlString(textLine))
