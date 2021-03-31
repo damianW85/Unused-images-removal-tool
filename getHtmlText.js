@@ -76,6 +76,7 @@ const boldElements = ['H1', 'H2', 'H3', 'H4', 'H5', 'H6'];
     const rootFolder = path.join(__dirname, filename.replace(/([^\/]+$)/, ''))
     const fontSize = 8
     const headingFontSize = 10
+    const textLineLength = 198
     let comparisonTable = false
     const doc = new jsPDF()
     doc.addFileToVFS('calibriNormal.ttf', calibriNormal)
@@ -86,28 +87,24 @@ const boldElements = ['H1', 'H2', 'H3', 'H4', 'H5', 'H6'];
 
     // get all the text by querying all elements with the copy class.
     dom.window.document.querySelectorAll('.copy').forEach(domNode => {
-      // filter all tags from the innerHTML of the dom node except for strong tags so we can know where text is bold.
-      const stringWithStrongTags = cleanHtmlString(domNode.innerHTML, 'strong')
-      // Identify elements inside the comparison table and push the table name into the results array.
-      if (domNode.closest('.compare-wrapper')) {
-        results.push({
-          name: 'compareTable'
-        })
-      } else {
-        results.push({
-          name: domNode.nodeName,
-          text: stringWithStrongTags
-        })
-      }
+      // filter all tags from the innerHTML of the dom node except for strong tags, then replace those tags with ** so we can know where text is bold.
+      const stringWithStrongTags = cleanHtmlString(domNode.innerHTML, ['strong']).replace(/(<[^>]*>)|(^ +|\n|\t|\r)/gm, '**')
+
+      results.push({
+        parentClasses: domNode.closest('.section').className,
+        name: domNode.nodeName,
+        textArray: doc.splitTextToSize(stringWithStrongTags, textLineLength)
+      })
     })
     // this is the padding gap on the left of the document.
     const startGap = 15
     let verticalGap = startGap
+    let currentSection = ''
     // this is effectively the line height.
     const horizontalGap = 10
 
     results.map(textObject => {
-      if (textObject.name === 'compareTable') {
+      if (textObject.parentClasses.includes('section-compare-table')) {
         if (!comparisonTable) {
           // create the comparison table, update the verticalGap and set the variable to true.
           buildTable(dom, doc, {
@@ -120,47 +117,43 @@ const boldElements = ['H1', 'H2', 'H3', 'H4', 'H5', 'H6'];
       }
       // check if we need to add a new page to the document.
       needNewPage(verticalGap) ? (doc.addPage(), verticalGap = startGap) : null
-      const fullText = cleanHtmlString(textObject.text).trim()
-      // strip the text from the strong tags in to an array.
-      const textStrippedFromTags = textObject.text.match(/(?<=>)([\w\s]+)(?=<\/)/g)
 
-      const arrayOfNormalAndBoldText = textObject.text.split(/(?<=>)([\w\s]+)(?=<\/)/g)
+      textObject.textArray.map((textLine, i) => {
+        const arrayOfNormalAndBoldText = textLine.split('**')
 
-      if (!boldElements.includes(textObject.name) && arrayOfNormalAndBoldText.length) {
-        let paddingLeft = horizontalGap
-        arrayOfNormalAndBoldText.map((text, i) => {
-          const cleanText = cleanHtmlString(text)
+        if (!boldElements.includes(textObject.name) && arrayOfNormalAndBoldText.length) {
+          let paddingLeft = horizontalGap
 
-          if (!cleanText.length) return
-          needNewPage(verticalGap) ? (doc.addPage(), verticalGap = startGap) : null
-          doc.setFontSize(fontSize)
-          doc.setFont('calibriBold', 'bold')
+          arrayOfNormalAndBoldText.map((text, j) => {
+            const cleanText = cleanHtmlString(text)
+            if (!cleanText.length) return
 
-          if (i % 2 === 0) {
-            doc.setFont('calibriNormal', 'normal')
-          }
+            doc.setFontSize(fontSize)
+            doc.setFont('calibriBold', 'bold')
+            if (j % 2 === 0) doc.setFont('calibriNormal', 'normal')
+            // split the footer section \\
+            // if (currentSection === 'section w6ea047' && doc.getFont().fontName=== 'calibriBold') {
+            //   paddingLeft = horizontalGap
+            //   verticalGap += updateLineGap(1)
+            // }
 
-          doc.splitTextToSize(cleanText, 190).map(t => {
-            doc.text(paddingLeft, verticalGap, t)
-            verticalGap += updateLineGap(1)
+            if (currentSection !== textObject.parentClasses) {
+              verticalGap += updateLineGap(1)
+              currentSection = textObject.parentClasses
+            }
+            doc.text(paddingLeft, verticalGap, cleanText)
+            paddingLeft += doc.getTextWidth(cleanText) + 1
           })
-        })
-      } else if (boldElements.includes(textObject.name)) {
-        // check for header elements and write them in bold to the doc.
-        doc.setFont('calibriBold', 'bold')
-        doc.setFontSize(headingFontSize)
-        if (verticalGap !== startGap) verticalGap += updateLineGap(doc.splitTextToSize(fullText, 190).length)
-        doc.text(horizontalGap, verticalGap, doc.splitTextToSize(fullText, 190))
-        verticalGap += updateLineGap(doc.splitTextToSize(fullText, 190).length)
-      } else {
-        // write normal text to the doc.
-        doc.setFont('calibriNormal', 'normal')
-        doc.setFontSize(fontSize)
-        doc.text(horizontalGap, verticalGap, doc.splitTextToSize(fullText, 190))
-        verticalGap += updateLineGap(doc.splitTextToSize(fullText, 190).length)
-      }
-      // update the line height after writing the text.
-
+          verticalGap += updateLineGap(1)
+        }
+        if (boldElements.includes(textObject.name)) {
+          // check for header elements and write them in bold to the doc.
+          doc.setFont('calibriBold', 'bold')
+          doc.setFontSize(headingFontSize)
+          if (verticalGap !== startGap) verticalGap += updateLineGap(1)
+          doc.text(horizontalGap, verticalGap, cleanHtmlString(textLine))
+        }
+      })
     })
 
     try {

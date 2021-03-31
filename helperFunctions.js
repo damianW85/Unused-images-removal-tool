@@ -27,13 +27,18 @@ const createFile = (filePath, fileContent) => fs.writeFile(filePath, fileContent
   console.log(`Text file created at: ${filePath}`)
 })
 
-const cleanHtmlString = (str, ignore = null) => {
-  const htmlTagsToRemove = ignore ? new RegExp(`<(?!\/?${ignore}>)[^>]+>`, 'g') : /(<[^>]*>)|(^ +|\n|\t|\r)/gm
+const cleanHtmlString = (str, ignore = []) => {
+  const htmlTagsToRemove = ignore ? new RegExp(
+      `<(?!\/?${ignore.map((t, i) => i !== ignore.length - 1 ? `${t}|` : `${t}`).join('')}>)[^>]+>`, 'g') :
+    /(<[^>]*>)|(^ +|\n|\t|\r)/gm
+
   const doubleSpaces = /\s\s+/g
   const beginningSpaces = /^\s/g
+  const nBs = /&nbsp;/g
 
   return str.replace(htmlTagsToRemove, ' ')
     .replace(doubleSpaces, ' ')
+    .replace(nBs, ' ')
     .replace(beginningSpaces, '').trim()
 }
 
