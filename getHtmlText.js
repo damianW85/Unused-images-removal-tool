@@ -27,7 +27,7 @@ const arrayToRow = (arr, isHeader) => {
   if (isHeader) {
     arr.map(rowArray => rows.push(rowArray[0]))
   } else {
-    for (let i = 1; i < arr[0].length - 1; i++) {
+    for (let i = 1; i < arr[0].length; i++) {
       const row = []
       arr.map(subArr => row.push(subArr[i]))
       rows.push(row)
@@ -76,7 +76,7 @@ const boldElements = ['H1', 'H2', 'H3', 'H4', 'H5', 'H6'];
     const rootFolder = path.join(__dirname, filename.replace(/([^\/]+$)/, ''))
     const fontSize = 8
     const headingFontSize = 10
-    const textLineLength = 198
+    const textLineLength = 185
     let comparisonTable = false
     const doc = new jsPDF()
     doc.addFileToVFS('calibriNormal.ttf', calibriNormal)
@@ -110,13 +110,11 @@ const boldElements = ['H1', 'H2', 'H3', 'H4', 'H5', 'H6'];
           buildTable(dom, doc, {
             verticalGap,
             horizontalGap
-          }, totalTableCells => verticalGap += (totalTableCells * 12))
+          }, totalTableCells => verticalGap += (totalTableCells * 11))
           comparisonTable = true
         }
         return
       }
-      // check if we need to add a new page to the document.
-      needNewPage(verticalGap) ? (doc.addPage(), verticalGap = startGap) : null
 
       textObject.textArray.map((textLine, i) => {
         const arrayOfNormalAndBoldText = textLine.split('**')
@@ -131,20 +129,23 @@ const boldElements = ['H1', 'H2', 'H3', 'H4', 'H5', 'H6'];
             doc.setFontSize(fontSize)
             doc.setFont('calibriBold', 'bold')
             if (j % 2 === 0) doc.setFont('calibriNormal', 'normal')
-            // split the footer section \\
-            // if (currentSection === 'section w6ea047' && doc.getFont().fontName=== 'calibriBold') {
-            //   paddingLeft = horizontalGap
-            //   verticalGap += updateLineGap(1)
-            // }
 
             if (currentSection !== textObject.parentClasses) {
               verticalGap += updateLineGap(1)
               currentSection = textObject.parentClasses
             }
             doc.text(paddingLeft, verticalGap, cleanText)
-            paddingLeft += doc.getTextWidth(cleanText) + 1
+            // split the footer section.
+            if (currentSection === 'section w6ea047') {
+              if (doc.getFont().fontName !== 'calibriBold')
+                paddingLeft = horizontalGap
+              verticalGap += updateLineGap(1)
+            } else {
+              paddingLeft += doc.getTextWidth(cleanText) + 1
+            }
           })
-          verticalGap += updateLineGap(1)
+          // Only update the vertical spacing if we are not in the footer section.
+          if (currentSection !== 'section w6ea047') verticalGap += updateLineGap(1)
         }
         if (boldElements.includes(textObject.name)) {
           // check for header elements and write them in bold to the doc.
@@ -153,6 +154,8 @@ const boldElements = ['H1', 'H2', 'H3', 'H4', 'H5', 'H6'];
           if (verticalGap !== startGap) verticalGap += updateLineGap(1)
           doc.text(horizontalGap, verticalGap, cleanHtmlString(textLine))
         }
+        // check if we need to add a new page to the document.
+        needNewPage(verticalGap) ? (doc.addPage(), verticalGap = startGap) : null
       })
     })
 
