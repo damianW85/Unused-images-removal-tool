@@ -121,9 +121,8 @@ const buildTable = (dom, doc, position, callback) => {
       }
 
       textObject.textArray.map(textLine => {
-        const arrayOfNormalAndBoldText = textLine.split('**')
-
-        if (!boldElements.includes(textObject.name) && arrayOfNormalAndBoldText.length) {
+        if (!boldElements.includes(textObject.name)) {
+          const arrayOfNormalAndBoldText = textLine.split('**')
           let paddingLeft = horizontalGap
 
           arrayOfNormalAndBoldText.map((text, j) => {
@@ -149,8 +148,7 @@ const buildTable = (dom, doc, position, callback) => {
           })
           // Only update the vertical spacing if we are not in the footer section.
           if (currentSection !== footerSection) verticalGap += updateLineGap(1)
-        }
-        if (boldElements.includes(textObject.name)) {
+        } else {
           // check for header elements and write them in bold to the doc.
           doc.setFont(...boldFont)
           doc.setFontSize(headingFontSize)
