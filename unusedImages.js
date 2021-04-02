@@ -17,10 +17,8 @@ const checkForUnusedImages = async (breakpoints, browser, page, filePath) => {
 
   // Loop through deviceScales array
   for (let d = 0; d < deviceScales.length; d++) {
-    console.log('deviceScalkes ', deviceScales.length, d)
     // Loop through breakpoints and set the viewport to each point, to load all necessary images.
     for (let i = 0; i < breakpoints.length; i++) {
-      console.log('breakpointses ', breakpoints.length, i)
       await page.setViewport({
         width: breakpoints[i],
         height: 1200,
@@ -57,9 +55,7 @@ const checkForUnusedImages = async (breakpoints, browser, page, filePath) => {
 
 (() => searchForFiles('./', /\.html$/, async (filename) => {
   console.log('-- found: ', filename)
-  const browser = await puppeteer.launch({
-    headless: false
-  })
+  const browser = await puppeteer.launch()
   const page = await browser.newPage()
   await page.goto(fileUrl(filename))
   const client = await page.target().createCDPSession()
