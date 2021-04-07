@@ -31,7 +31,7 @@ const checkForUnusedImages = async (breakpoints, browser, page, filePath) => {
       // Store the name of each image requested in the usedImages array.
       page.on('request', (req) => {
         if (req.resourceType() === 'image') {
-          usedImages.push(req._url.split(/(\\|\/)/g).pop())
+          usedImages.push(req._url.split(/(\\|\/)/g).pop().replace(/\?.*/, ''))
         }
       })
 
