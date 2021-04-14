@@ -54,6 +54,8 @@ const checkForUnusedImages = async (breakpoints, browser, page, filePath) => {
 }
 
 (() => searchForFiles('./', /\.html$/, async (filename) => {
+  if (filename.includes('reference')) return
+
   console.log('-- found: ', filename)
   const browser = await puppeteer.launch()
   const page = await browser.newPage()
