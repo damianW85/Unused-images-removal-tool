@@ -13,7 +13,7 @@ const checkForUnusedImages = async (breakpoints, browser, page, filePath) => {
   const deviceScales = [1, 2]
   const rootFolder = path.join(__dirname, filePath.replace(/([^\/]+$)/, ''))
   // TODO: make the images array formation more dynamic.
-  const allImages = Array.from(fs.readdirSync(`${rootFolder}images`))
+  const allImages = Array.from(fs.readdirSync(`${rootFolder}images`)).map(t => t.replace(/\?.*/, ''))
 
   // Loop through deviceScales array
   for (let d = 0; d < deviceScales.length; d++) {
