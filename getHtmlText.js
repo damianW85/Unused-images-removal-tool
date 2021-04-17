@@ -107,7 +107,7 @@ const buildTable = (dom, doc, position, callback) => {
     let verticalGap = startGap
     let currentSection = ''
 
-    results.map(textObject => {
+    results.map((textObject, idx) => {
       if (textObject.parentClasses.includes(compareSection)) {
         if (!comparisonTable) {
           // create the comparison table, update the verticalGap and set the variable to true.
@@ -133,10 +133,11 @@ const buildTable = (dom, doc, position, callback) => {
             doc.setFont(...boldFont)
             if (j % 2 === 0) doc.setFont(...normalFont)
 
-            if (currentSection !== textObject.parentClasses) {
+            if (results[idx - 1] && boldElements.includes(results[idx - 1].name) || currentSection !== textObject.parentClasses) {
               verticalGap += updateLineGap(1)
               currentSection = textObject.parentClasses
             }
+
             doc.text(paddingLeft, verticalGap, cleanText)
             // split the footer section.
             if (currentSection === footerSection) {
