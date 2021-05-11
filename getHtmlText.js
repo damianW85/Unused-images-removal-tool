@@ -39,10 +39,10 @@ const arrayToRow = (arr, isHeader = false) => {
 const buildTable = (dom, doc, position, callback) => {
   const tableArray = []
 
-  for (let z = 0; dom.window.document.querySelectorAll(`.product-${z}`).length; z++) {
+  for (let z = 0; dom.window.document.querySelectorAll(`.compare-column-${z}`).length; z++) {
     const column = []
 
-    dom.window.document.querySelectorAll(`.product-${z}`).forEach(tableNode => {
+    dom.window.document.querySelectorAll(`.compare-column-${z}`).forEach(tableNode => {
       column.push(...[cleanHtmlString(tableNode.innerHTML)].filter(Boolean))
     })
     tableArray.push(column)
