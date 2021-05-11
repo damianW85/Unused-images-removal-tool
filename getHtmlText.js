@@ -162,8 +162,7 @@ const buildTable = (dom, doc, position, callback) => {
     })
 
     try {
-      doc.save(`${rootFolder}HTMLText.pdf`)
-      return console.log('PDF File Saved at: ', `${rootFolder}HTMLText.pdf`)
+      doc.save(`${rootFolder}${rootFolder.replace('/Users/damianwhyte/Desktop/Projects/Unused-images-removal-tool/', '').replaceAll('/', '_')}iPhone12Pro_Q221_Web_Marketing_Page_CopyDeck.pdf`)
     } catch (error) {
       console.error('Error Saving PDF File ', error)
     }
