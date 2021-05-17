@@ -91,6 +91,7 @@ const buildTable = (dom, doc, position, callback) => {
 
     // get all the text by querying all elements with the copy class.
     dom.window.document.querySelectorAll('.copy').forEach(domNode => {
+      if (domNode.closest('.small-hide')) return
       // filter all tags from the innerHTML of the dom node except for strong tags, then replace those tags with ** so we can know where text is bold.
       const stringWithBoldStars = cleanHtmlString(domNode.innerHTML, ['strong']).replace(/(<[^>]*>)|(^ +|\n|\t|\r)/gm, '**')
 
