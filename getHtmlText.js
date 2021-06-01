@@ -51,7 +51,7 @@ const buildTable = (dom, doc, position, callback) => {
   return doc.autoTable({
     head: arrayToRow(tableArray, true),
     body: arrayToRow(tableArray),
-    startY: position.verticalGap,
+    startY: position.verticalGap + 5,
     didDrawPage: HookData => {
       callback(HookData.table.body.length)
     },
@@ -81,6 +81,7 @@ const buildTable = (dom, doc, position, callback) => {
     const footerSection = 'section w6ea047'
     const boldFont = ['calibriBold', 'bold']
     const normalFont = ['calibriNormal', 'normal']
+    const pdfName = 'Q221_Web_Marketing_Page_CopyDeck'
 
     const doc = new jsPDF()
     doc.addFileToVFS('calibriNormal.ttf', calibriNormal)
@@ -91,6 +92,8 @@ const buildTable = (dom, doc, position, callback) => {
 
     // get all the text by querying all elements with the copy class.
     dom.window.document.querySelectorAll('.copy').forEach(domNode => {
+      // prevent duplication of text in the pdf.
+      if (domNode.closest('.small-hide')) return
       // filter all tags from the innerHTML of the dom node except for strong tags, then replace those tags with ** so we can know where text is bold.
       const stringWithBoldStars = cleanHtmlString(domNode.innerHTML, ['strong']).replace(/(<[^>]*>)|(^ +|\n|\t|\r)/gm, '**')
 
@@ -120,7 +123,7 @@ const buildTable = (dom, doc, position, callback) => {
         return
       }
 
-      textObject.textArray.map(textLine => {
+      textObject.textArray.map((textLine, textIdx) => {
         if (!boldElements.includes(textObject.name)) {
           const arrayOfNormalAndBoldText = textLine.split('**')
           let paddingLeft = horizontalGap
@@ -133,7 +136,7 @@ const buildTable = (dom, doc, position, callback) => {
             doc.setFont(...boldFont)
             if (j % 2 === 0) doc.setFont(...normalFont)
 
-            if (results[idx - 1] && boldElements.includes(results[idx - 1].name) || currentSection !== textObject.parentClasses) {
+            if (textIdx === 0 && results[idx - 1] && boldElements.includes(results[idx - 1].name) || currentSection !== textObject.parentClasses) {
               verticalGap += updateLineGap(1)
               currentSection = textObject.parentClasses
             }
@@ -162,7 +165,9 @@ const buildTable = (dom, doc, position, callback) => {
     })
 
     try {
-      doc.save(`${rootFolder}${rootFolder.replace('/Users/damianwhyte/Desktop/Projects/Unused-images-removal-tool/', '').replaceAll('/', '_')}iPhone12_Q221_Web_Marketing_Page_CopyDeck.pdf`)
+      const filePath = `${rootFolder}${rootFolder.replace(`${path.resolve()}/`, '').replaceAll('/', '_')}${pdfName}.pdf`
+      doc.save(filePath)
+      return console.log('PDF File Saved at: ', filePath)
     } catch (error) {
       console.error('Error Saving PDF File ', error)
     }
