@@ -63,3 +63,17 @@ const isiMacBuild = true
 ```
 
 In `getHtmlText.js` line 22 there are a list of global variables which specifies classnames and configurations for the spring 2021 workshop builds. If the build you are working is different then these variables will need to be updated before the script will work correctly.
+
+
+# Get-Attribute-Text-Tool
+This script finds and extracts text from a specified attribute type within `.html` files then writes the text to a CSV and saves it in the root directory of the `.html` file. This script works with all `.html` files.
+
+It is essential that the `.html` files are either in the same directory as `getAttributeText.js` or a subdirectory.
+
+**Configuration**
+The only necessary configuration is to specify the attribute from which you require the text content as a string. see below for the default which is set to `aria-label`.
+
+```javascript
+// getAttributeText.js line 12
+const attributeName = 'aria-label'
+```

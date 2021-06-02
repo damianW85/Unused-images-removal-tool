@@ -7,26 +7,27 @@ const {
 const {
   searchForFiles,
   cleanHtmlString
-} = require('./helperFunctions');
+} = require('./helperFunctions')
+
+const attributeName = 'aria-label';
 
 (() => searchForFiles('./', /\.html$/, filename => {
   console.log('-- found: ', filename)
 
   JSDOM.fromFile(filename).then(dom => {
-    let comparisonTable = false
     const results = []
     const rootFolder = path.join(__dirname, filename.replace(/([^\/]+$)/, ''))
 
     const csvWriter = createCsvWriter({
-      path: `${rootFolder}ARIA-LABEL-Text.csv`,
+      path: `${rootFolder}${attributeName}-Text.csv`,
       header: [{
         id: 'text',
         title: 'Text Content'
       }]
     })
 
-    dom.window.document.querySelectorAll('[aria-label]').forEach(domNode => {
-      const textString = cleanHtmlString(domNode.getAttribute('aria-label'))
+    dom.window.document.querySelectorAll(`[${attributeName}]`).forEach(domNode => {
+      const textString = cleanHtmlString(domNode.getAttribute(`${attributeName}`))
 
       results.push({
         text: textString
@@ -34,6 +35,6 @@ const {
     })
 
     csvWriter.writeRecords(results)
-      .then(() => console.log(`...Done! filepath: ${rootFolder}ARIA-LABEL-Text.csv`))
+      .then(() => console.log(`...Done! filepath: ${rootFolder}${attributeName}-Text.csv`))
   })
 }))()
