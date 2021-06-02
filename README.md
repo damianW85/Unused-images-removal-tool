@@ -37,6 +37,8 @@ const browser = await puppeteer.launch({ headless: false })
 # Get-HTML-Text-Tool
 This script finds and extracts text from `.html` files then writes the text to a PDF and saves it in the root directory of the `.html` file.
 
+It is essential that the `.html` files are either in the same directory as `getHtmlText.js` or a subdirectory.
+
 This script was written to work with the spring 2021 workshop html builds. Results may vary if used with other builds unless they are similar to the spring 2021 workshop builds.
 
 No configuration is needed if trying to extract text from the iPhone 12, 12Pro or iPadPro builds, simply run the script as instructed below.
