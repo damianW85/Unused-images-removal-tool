@@ -15,14 +15,16 @@ const {
 
 const {
   searchForFiles,
-  cleanHtmlString
+  cleanHtmlString,
+  buildImacTableData
 } = require('./helperFunctions')
 
 // GLOBALS
+const isiMacBuild = false
 const updateLineGap = multiple => multiple * 5
 const needNewPage = vertGap => vertGap > 275
 const pdfName = 'Q221_Web_Marketing_Page_CopyDeck'
-const compareSection = 'section-compare-table'
+const compareSectionClass = isiMacBuild ? 'section theme-light s21bf56' : 'section-compare-table'
 const compareClass = 'compare-column-'
 const footerSection = 'section w6ea047'
 const hiddenOnMobile = 'small-hide'
@@ -43,21 +45,23 @@ const arrayToRow = (arr, isHeader = false) => {
   return isHeader ? [rows] : rows
 }
 
-const buildTable = (dom, doc, position, callback) => {
+const buildTable = (iMacTableData, dom, doc, position, callback) => {
   const tableArray = []
+  if (iMacTableData === null) {
 
-  for (let z = 0; dom.window.document.querySelectorAll(`.${compareClass}${z}`).length; z++) {
-    const column = []
+    for (let z = 0; dom.window.document.querySelectorAll(`.${compareClass}${z}`).length; z++) {
+      const column = []
 
-    dom.window.document.querySelectorAll(`.${compareClass}${z}`).forEach(tableNode => {
-      column.push(...[cleanHtmlString(tableNode.innerHTML)].filter(Boolean))
-    })
-    tableArray.push(column)
+      dom.window.document.querySelectorAll(`.${compareClass}${z}`).forEach(tableNode => {
+        column.push(...[cleanHtmlString(tableNode.innerHTML)].filter(Boolean))
+      })
+      tableArray.push(column)
+    }
   }
 
   return doc.autoTable({
-    head: arrayToRow(tableArray, true),
-    body: arrayToRow(tableArray),
+    head: iMacTableData ? [iMacTableData.forImac.splice(0, 2)] : arrayToRow(tableArray, true),
+    body: iMacTableData ? arrayToRow([iMacTableData.row1, iMacTableData.row2]) : arrayToRow(tableArray),
     startY: position.verticalGap + 5,
     didDrawPage: HookData => {
       callback(HookData.table.body.length)
@@ -113,18 +117,23 @@ const buildTable = (dom, doc, position, callback) => {
     const horizontalGap = 10
     let verticalGap = startGap
     let currentSection = ''
+    let count = 0
 
     results.map((textObject, idx) => {
-      if (textObject.parentClasses.includes(compareSection)) {
-        if (!comparisonTable) {
+      if (textObject.parentClasses.includes(compareSectionClass)) {
+        count++
+        if (isiMacBuild && count > 2 && !comparisonTable || !isiMacBuild && !comparisonTable) {
+          const tableData = isiMacBuild ? buildImacTableData(results, compareSectionClass) : null
+          const cellHieght = isiMacBuild ? 8 : 11
           // create the comparison table, update the verticalGap and set the variable to true.
-          buildTable(dom, doc, {
+          buildTable(tableData, dom, doc, {
             verticalGap,
             horizontalGap
-          }, totalTableCells => verticalGap += (totalTableCells * 11))
+          }, totalTableCells => verticalGap += (totalTableCells * cellHieght))
           comparisonTable = true
         }
-        return
+        if (!isiMacBuild) return
+        if (count > 2) return
       }
 
       textObject.textArray.map((textLine, textIdx) => {
@@ -168,8 +177,8 @@ const buildTable = (dom, doc, position, callback) => {
       })
     })
 
+    const filePath = `${rootFolder}${rootFolder.replace(`${path.resolve()}/`, '').replaceAll('/', '_')}${pdfName}.pdf`
     try {
-      const filePath = `${rootFolder}${rootFolder.replace(`${path.resolve()}/`, '').replaceAll('/', '_')}${pdfName}.pdf`
       doc.save(filePath)
       return console.log('PDF File Saved at: ', filePath)
     } catch (error) {
