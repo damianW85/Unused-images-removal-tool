@@ -18,8 +18,15 @@ const {
   cleanHtmlString
 } = require('./helperFunctions')
 
+// GLOBALS
 const updateLineGap = multiple => multiple * 5
 const needNewPage = vertGap => vertGap > 275
+const pdfName = 'Q221_Web_Marketing_Page_CopyDeck'
+const compareSection = 'section-compare-table'
+const compareClass = 'compare-column-'
+const footerSection = 'section w6ea047'
+const hiddenOnMobile = 'small-hide'
+const copyClass = 'copy'
 
 const arrayToRow = (arr, isHeader = false) => {
   const rows = []
@@ -39,10 +46,10 @@ const arrayToRow = (arr, isHeader = false) => {
 const buildTable = (dom, doc, position, callback) => {
   const tableArray = []
 
-  for (let z = 0; dom.window.document.querySelectorAll(`.compare-column-${z}`).length; z++) {
+  for (let z = 0; dom.window.document.querySelectorAll(`.${compareClass}${z}`).length; z++) {
     const column = []
 
-    dom.window.document.querySelectorAll(`.compare-column-${z}`).forEach(tableNode => {
+    dom.window.document.querySelectorAll(`.${compareClass}${z}`).forEach(tableNode => {
       column.push(...[cleanHtmlString(tableNode.innerHTML)].filter(Boolean))
     })
     tableArray.push(column)
@@ -73,15 +80,12 @@ const buildTable = (dom, doc, position, callback) => {
     let comparisonTable = false
     const results = []
     const rootFolder = path.join(__dirname, filename.replace(/([^\/]+$)/, ''))
+    const boldFont = ['calibriBold', 'bold']
+    const normalFont = ['calibriNormal', 'normal']
+    const boldElements = ['H1', 'H2', 'H3', 'H4', 'H5', 'H6']
     const fontSize = 8
     const headingFontSize = 10
     const textLineLength = 185
-    const boldElements = ['H1', 'H2', 'H3', 'H4', 'H5', 'H6']
-    const compareSection = 'section-compare-table'
-    const footerSection = 'section w6ea047'
-    const boldFont = ['calibriBold', 'bold']
-    const normalFont = ['calibriNormal', 'normal']
-    const pdfName = 'Q221_Web_Marketing_Page_CopyDeck'
 
     const doc = new jsPDF()
     doc.addFileToVFS('calibriNormal.ttf', calibriNormal)
@@ -91,9 +95,9 @@ const buildTable = (dom, doc, position, callback) => {
     doc.setFontSize(fontSize)
 
     // get all the text by querying all elements with the copy class.
-    dom.window.document.querySelectorAll('.copy').forEach(domNode => {
+    dom.window.document.querySelectorAll(`.${copyClass}`).forEach(domNode => {
       // prevent duplication of text in the pdf.
-      if (domNode.closest('.small-hide')) return
+      if (domNode.closest(`.${hiddenOnMobile}`)) return
       // filter all tags from the innerHTML of the dom node except for strong tags, then replace those tags with ** so we can know where text is bold.
       const stringWithBoldStars = cleanHtmlString(domNode.innerHTML, ['strong']).replace(/(<[^>]*>)|(^ +|\n|\t|\r)/gm, '**')
 
