@@ -28,6 +28,18 @@ const checkForUnusedImages = async (breakpoints, browser, page, filePath) => {
       await page.goto(fileUrl(filePath), {
         waitUntil: 'networkidle0',
       })
+      // Look for all select options in compare page.
+      const options = await page.$$eval('select[id="0"] option', (options) =>
+        options.map((option) => option.value)
+      )
+
+      if (options.length) {
+        for (let p = 0; p < options.length; p++) {
+          // Select each option in the first dropdown to load all assets.
+          await page.select('select[id="0"]', options[p])
+        }
+      }
+
       // Store the name of each image requested in the usedImages array.
       page.on('request', (req) => {
         if (req.resourceType() === 'image') {
@@ -57,7 +69,9 @@ const checkForUnusedImages = async (breakpoints, browser, page, filePath) => {
   if (filename.includes('reference')) return
 
   console.log('-- found: ', filename)
-  const browser = await puppeteer.launch()
+  const browser = await puppeteer.launch({
+    headless: false
+  })
   const page = await browser.newPage()
   await page.goto(fileUrl(filename))
   const client = await page.target().createCDPSession()
@@ -79,10 +93,8 @@ const checkForUnusedImages = async (breakpoints, browser, page, filePath) => {
       })
     })
   })
-  // Start with 400px for loading the smallest assets.
-  breakpoints = [400, ...new Set(breakpoints.map(point => point.value))].sort((a, b) => a - b)
-  // If for some reason we only find 1 breakpoint in the css, add some generic ones to test.
-  if (breakpoints.length < 2) breakpoints = [...breakpoints, 800, 1200, 1600]
+  // Start with 400px for loading the smallest assets, also add 1800px for largest assets.
+  breakpoints = [400, ...new Set(breakpoints.map(point => point.value)), 1800].sort((a, b) => a - b)
   // Show the breakpoints we have found in css.
   console.log('Breakpoints: ', breakpoints)
   return checkForUnusedImages(breakpoints, browser, page, filename)
