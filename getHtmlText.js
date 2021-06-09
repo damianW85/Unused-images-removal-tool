@@ -132,8 +132,7 @@ const buildTable = (iMacTableData, dom, doc, position, callback) => {
           }, totalTableCells => verticalGap += (totalTableCells * cellHieght))
           comparisonTable = true
         }
-        if (!isiMacBuild) return
-        if (count > 2) return
+        if (!isiMacBuild || count > 2) return
       }
 
       textObject.textArray.map((textLine, textIdx) => {
