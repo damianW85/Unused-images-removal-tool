@@ -1,14 +1,21 @@
 {
-  "name": "unused_assets_removal_tool",
+  "name": "work_shop_tool_box",
   "version": "1.0.0",
   "author": "damian",
   "license": "ISC",
+  "scripts": {
+    "script:unusedImages": "node unusedImages.js",
+    "script:getHtmlText": "node getHtmlText.js",
+    "customScripts": "npm-run-all --parallel script:*"
+  },
   "dependencies": {
     "csv-writer": "^1.6.0",
     "file-url": "^3.0.0",
+    "gulp": "^3.9.1",
     "jsdom": "^16.5.1",
     "jspdf": "^2.3.1",
     "jspdf-autotable": "^3.5.14",
+    "npm-run-all": "^4.0.2",
     "puppeteer": "^8.0.0"
   }
 }
