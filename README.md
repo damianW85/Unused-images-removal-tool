@@ -77,3 +77,26 @@ The only necessary configuration is to specify the attribute from which you requ
 // getAttributeText.js line 12
 const attributeName = 'aria-label'
 ```
+
+# Screne-Shot-Element-Tool
+This script finds finds an element within `.html` files then takes a screenshot at the specified breakpoints and saves it in the root directory of the `.html` file.
+
+It is essential that the `.html` files are either in the same directory as `screenShotElements.js` or a subdirectory.
+
+**Configuration**
+The only necessary configuration is to specify the class or id of the element you would like to screenshot. See below for the details.
+
+```javascript
+// screenShotElements.js line 12
+const targetElement = '.d4daecb'
+```
+If necessary you may also add additional breakpoints at which to take screenshots to the breakpoints array. See below for the details.
+
+```javascript
+// screenShotElements.js line 15
+const breakpoints = [
+  { name: 'mobile', size: 500 },
+  { name: 'tablet', size: 736 },
+  { name: 'desktop', size: 1069 }
+]
+```
